@@ -104,14 +104,14 @@ let g:rosetta_strip_c_style = 1
 Example:
 ```c
 /*
- * hogehoge
- * hogehoge
+ * my_function
+ * This is awesome function
  */
 ```
 Will be extracted as:
 ```
-hogehoge
-hogehoge
+my_function
+This is awesome function
 ```
 
 #### Custom Key Mapping
