@@ -134,6 +134,8 @@ Example:
 
 ## How It Works
 
+https://github.com/user-attachments/assets/5573ea0c-9e63-4fc5-9127-55de81b48861
+
 ### Comment Translation
 1. Detects if the cursor is on a comment using Vim's syntax highlighting
 2. Extracts the comment text (supports multi-line comments)
