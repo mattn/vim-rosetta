@@ -187,7 +187,7 @@ function! s:show_translation_popup(text) abort
     call popup_close(s:popup_id)
   endif
 
-  let l:max_width = get(g:, 'rosetta_popup_max_width', 80)
+  let l:max_width = get(g:, 'rosetta_popup_max_width', &columns)
   let l:lines = split(a:text, '\n')
   let s:popup_id = popup_atcursor(l:lines, {
         \ 'moved': 'any',
