@@ -138,26 +138,35 @@ function! s:get_comment_at_cursor() abort
   return l:comment
 endfunction
 
-function! s:translate_api(source_lang, target_lang, text) abort
+function! s:translate_api(source_lang, target_lang, text, callback) abort
   if empty(a:text)
-    return []
+    call a:callback([])
+    return
   endif
   let l:encoded_text = s:urlencode(a:text)
   let l:url = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=' . a:source_lang . '&tl=' . a:target_lang . '&dt=t&q=' . l:encoded_text
-  let l:response = system('curl -s "' . l:url . '"')
-  if v:shell_error != 0
-    throw 'Translation error'
-  endif
-  return json_decode(l:response)
+
+  let l:out = []
+  let l:job = job_start(['curl', '-s', l:url], {
+        \ 'out_cb': {ch, msg -> add(l:out, msg)},
+        \ 'close_cb': {ch -> a:callback(l:out)},
+        \ })
 endfunction
 
-function! s:translate_text(text, ...) abort
+function! s:translate_text(text, callback, ...) abort
+  let l:source_lang = 'auto'
+  let l:target_lang = a:0 > 0 ? a:1 : get(g:, 'rosetta_target_lang', 'ja')
+
+  call s:translate_api(l:source_lang, l:target_lang, a:text, {out -> s:parse_translation(out, a:callback)})
+endfunction
+
+function! s:parse_translation(out, callback) abort
   try
-    let l:source_lang = 'auto'
-    let l:target_lang = a:0 > 0 ? a:1 : get(g:, 'rosetta_target_lang', 'ja')
-    let l:items = s:translate_api(l:source_lang, l:target_lang, a:text)
+    let l:response = join(a:out, '')
+    let l:items = json_decode(l:response)
     if type(l:items) != v:t_list || empty(l:items) || type(l:items[0]) != v:t_list
-      return 'Translation failed'
+      call a:callback('Translation failed')
+      return
     endif
 
     let l:result = ''
@@ -167,9 +176,9 @@ function! s:translate_text(text, ...) abort
       endif
     endfor
 
-    return empty(l:result) ? 'Translation failed' : l:result
+    call a:callback(empty(l:result) ? 'Translation failed' : l:result)
   catch
-    return 'Translation parse error'
+    call a:callback('Translation parse error')
   endtry
 endfunction
 
@@ -202,8 +211,7 @@ function! rosetta#translate_at(select) abort
   else
     let l:word = expand('<cword>')
   endif
-  let l:translation = s:translate_text(l:word)
-  call s:show_translation_popup(l:translation)
+  call s:translate_text(l:word, {translation -> s:show_translation_popup(translation)})
 endfunction
 
 " Main function: translate comment at cursor
@@ -215,8 +223,7 @@ function! rosetta#translate_comment() abort
     return
   endif
 
-  let l:translation = s:translate_text(l:comment)
-  call s:show_translation_popup(l:translation)
+  call s:translate_text(l:comment, {translation -> s:show_translation_popup(translation)})
 endfunction
 
 " Auto-translate comment on cursor hold
@@ -235,8 +242,7 @@ function! rosetta#translate_comment_auto() abort
     return
   endif
   let s:translate_comment_last = l:comment
-  let l:translation = s:translate_text(l:comment)
-  call s:show_translation_popup(l:translation)
+  call s:translate_text(l:comment, {translation -> s:show_translation_popup(translation)})
 endfunction
 
 " ============================================================================
@@ -274,22 +280,34 @@ function! rosetta#complete_name() abort
 
   let l:source_lang = get(g:, 'rosetta_target_lang', 'ja')
   let l:target_lang = 'auto'
-  let l:items = s:translate_api(l:source_lang, l:target_lang, l:base)
 
-  let l:completions = []
-  for l:item in l:items[0]
-    if type(l:item) == v:t_list && len(l:item) > 0 && type(l:item[0]) == v:t_string
-      let l:translation = l:item[0]
-      if empty(l:translation)
-        continue
-      endif
-      let l:snake = s:to_snake_case(l:translation)
-      call add(l:completions, l:snake)
-      call add(l:completions, toupper(l:snake))
-      call add(l:completions, s:to_camel_case(l:translation, 0))
-      call add(l:completions, s:to_camel_case(l:translation, 1))
-    endif
-  endfor
-  call complete(l:start + 1, uniq(l:completions))
+  call s:translate_api(l:source_lang, l:target_lang, l:base, {out -> s:complete_name_callback(out, l:start)})
   return ''
+endfunction
+
+function! s:complete_name_callback(out, start) abort
+  try
+    let l:response = join(a:out, '')
+    let l:items = json_decode(l:response)
+    if type(l:items) != v:t_list || empty(l:items) || type(l:items[0]) != v:t_list
+      return
+    endif
+
+    let l:completions = []
+    for l:item in l:items[0]
+      if type(l:item) == v:t_list && len(l:item) > 0 && type(l:item[0]) == v:t_string
+        let l:translation = l:item[0]
+        if empty(l:translation)
+          continue
+        endif
+        let l:snake = s:to_snake_case(l:translation)
+        call add(l:completions, l:snake)
+        call add(l:completions, toupper(l:snake))
+        call add(l:completions, s:to_camel_case(l:translation, 0))
+        call add(l:completions, s:to_camel_case(l:translation, 1))
+      endif
+    endfor
+    call complete(a:start + 1, uniq(l:completions))
+  catch
+  endtry
 endfunction
