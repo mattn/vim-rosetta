@@ -35,36 +35,86 @@ function! s:comment_at_cursor() abort
     return ''
   endif
 
-  let l:text = getline(l:line)
-  let l:start_col = l:col
-  let l:end_col = l:col
+  let l:start_line = l:line
+  let l:end_line = l:line
 
-  while l:start_col > 1
-    let l:synid = synID(l:line, l:start_col - 1, 1)
+  while l:start_line > 1
+    let l:prev_line = l:start_line - 1
+    let l:prev_text = getline(l:prev_line)
+    if empty(trim(l:prev_text))
+      break
+    endif
+    let l:first_col = match(l:prev_text, '\S') + 1
+    if l:first_col == 0
+      break
+    endif
+    let l:synid = synID(l:prev_line, l:first_col, 1)
     let l:synname = synIDattr(l:synid, 'name')
     if l:synname !~? 'comment'
       break
     endif
-    let l:start_col -= 1
+    let l:start_line = l:prev_line
   endwhile
 
-  while l:end_col < len(l:text)
-    let l:synid = synID(l:line, l:end_col + 1, 1)
+  while l:end_line < line('$')
+    let l:next_line = l:end_line + 1
+    let l:next_text = getline(l:next_line)
+    if empty(trim(l:next_text))
+      break
+    endif
+    let l:first_col = match(l:next_text, '\S') + 1
+    if l:first_col == 0
+      break
+    endif
+    let l:synid = synID(l:next_line, l:first_col, 1)
     let l:synname = synIDattr(l:synid, 'name')
     if l:synname !~? 'comment'
       break
     endif
-    let l:end_col += 1
+    let l:end_line = l:next_line
   endwhile
 
-  let l:comment = strpart(l:text, l:start_col - 1, l:end_col - l:start_col + 1)
+  let l:lines = []
+  for l:i in range(l:start_line, l:end_line)
+    let l:text = getline(l:i)
+    let l:start_col = 1
+    let l:end_col = len(l:text)
+
+    while l:start_col <= len(l:text)
+      let l:synid = synID(l:i, l:start_col, 1)
+      let l:synname = synIDattr(l:synid, 'name')
+      if l:synname =~? 'comment'
+        break
+      endif
+      let l:start_col += 1
+    endwhile
+
+    while l:end_col > 0
+      let l:synid = synID(l:i, l:end_col, 1)
+      let l:synname = synIDattr(l:synid, 'name')
+      if l:synname =~? 'comment'
+        break
+      endif
+      let l:end_col -= 1
+    endwhile
+
+    if l:start_col <= l:end_col
+      call add(l:lines, strpart(l:text, l:start_col - 1, l:end_col - l:start_col + 1))
+    endif
+  endfor
+
+  let l:comment = join(l:lines, ' ')
   let l:comment = substitute(l:comment, '^\s*//\s*', '', '')
+  let l:comment = substitute(l:comment, '\s*//\s*', ' ', 'g')
   let l:comment = substitute(l:comment, '^\s*#\s*', '', '')
+  let l:comment = substitute(l:comment, '\s*#\s*', ' ', 'g')
   let l:comment = substitute(l:comment, '^\s*/\*\s*', '', '')
   let l:comment = substitute(l:comment, '\s*\*/\s*$', '', '')
+  let l:comment = substitute(l:comment, '\s*\*\s*', ' ', 'g')
   let l:comment = substitute(l:comment, '^\s*"\s*', '', '')
   let l:comment = substitute(l:comment, '^\s*', '', '')
   let l:comment = substitute(l:comment, '\s*$', '', '')
+  let l:comment = substitute(l:comment, '\s\+', ' ', 'g')
 
   return l:comment
 endfunction
