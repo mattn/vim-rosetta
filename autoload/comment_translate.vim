@@ -104,17 +104,18 @@ function! s:comment_at_cursor() abort
   endfor
 
   let l:comment = join(l:lines, ' ')
-  let l:comment = substitute(l:comment, '^\s*//\s*', '', '')
-  let l:comment = substitute(l:comment, '\s*//\s*', ' ', 'g')
-  let l:comment = substitute(l:comment, '^\s*#\s*', '', '')
-  let l:comment = substitute(l:comment, '\s*#\s*', ' ', 'g')
-  let l:comment = substitute(l:comment, '^\s*/\*\s*', '', '')
-  let l:comment = substitute(l:comment, '\s*\*/\s*$', '', '')
-  let l:comment = substitute(l:comment, '\s*\*\s*', ' ', 'g')
+  let l:comment = substitute(l:comment, '^\s*/\*\+\s*', '', '')
+  let l:comment = substitute(l:comment, '\s*\*\+/\s*$', '', '')
+  let l:comment = substitute(l:comment, '^\s*\*\+\s*', '', '')
+  let l:comment = substitute(l:comment, '\s*\*\+\s*', ' ', 'g')
+  let l:comment = substitute(l:comment, '^\s*//\+\s*', '', '')
+  let l:comment = substitute(l:comment, '\s*//\+\s*', ' ', 'g')
+  let l:comment = substitute(l:comment, '^\s*#\+\s*', '', '')
+  let l:comment = substitute(l:comment, '\s*#\+\s*', ' ', 'g')
   let l:comment = substitute(l:comment, '^\s*"\s*', '', '')
+  let l:comment = substitute(l:comment, '\s\+', ' ', 'g')
   let l:comment = substitute(l:comment, '^\s*', '', '')
   let l:comment = substitute(l:comment, '\s*$', '', '')
-  let l:comment = substitute(l:comment, '\s\+', ' ', 'g')
 
   return l:comment
 endfunction
@@ -132,8 +133,24 @@ function! s:translate_text(text, ...) abort
   if v:shell_error != 0
     return 'Translation error'
   endif
-  let l:result = matchstr(l:response, '^\[\[\["\zs[^"]*')
-  return empty(l:result) ? 'Translation failed' : l:result
+
+  try
+    let l:json = json_decode(l:response)
+    if type(l:json) != v:t_list || empty(l:json) || type(l:json[0]) != v:t_list
+      return 'Translation failed'
+    endif
+
+    let l:result = ''
+    for l:item in l:json[0]
+      if type(l:item) == v:t_list && len(l:item) > 0 && type(l:item[0]) == v:t_string
+        let l:result .= l:item[0]
+      endif
+    endfor
+
+    return empty(l:result) ? 'Translation failed' : l:result
+  catch
+    return 'Translation parse error'
+  endtry
 endfunction
 
 function! s:show_translation_popup(text) abort
@@ -141,12 +158,15 @@ function! s:show_translation_popup(text) abort
     call popup_close(s:popup_id)
   endif
 
+  let l:max_width = get(g:, 'comment_translate_popup_max_width', 80)
   let l:lines = split(a:text, '\n')
   let s:popup_id = popup_atcursor(l:lines, {
         \ 'moved': 'any',
         \ 'padding': [0, 1, 0, 1],
         \ 'border': [1, 1, 1, 1],
         \ 'close': 'click',
+        \ 'wrap': 1,
+        \ 'maxwidth': l:max_width,
         \ })
 endfunction
 
