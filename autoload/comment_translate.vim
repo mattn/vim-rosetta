@@ -117,16 +117,21 @@ function! s:comment_at_cursor() abort
     let l:comment = substitute(l:comment, '\s*\*\+/$', '', '')
   elseif l:comment =~# '^//'
     " Line comment //
-    let l:comment = substitute(l:comment, '^//\+\s*', '', '')
+    let l:comment = substitute(l:comment, '^\(//\+\s*\)\|\n//\+\s*', '\n', 'g')
+    let l:comment = substitute(l:comment, '^\n', '', '')
   elseif l:comment =~# '^#'
     " Line comment #
-    let l:comment = substitute(l:comment, '^#\+\s*', '', '')
+    let l:comment = substitute(l:comment, '^\(#\+\s*\)\|\n#\+\s*', '\n', 'g')
+    let l:comment = substitute(l:comment, '^\n', '', '')
   elseif l:comment =~# '^"'
     " Line comment "
-    let l:comment = substitute(l:comment, '^"\s*', '', '')
+    let l:comment = substitute(l:comment, '^\("\s*\)\|\n"\s*', '\n', 'g')
+    let l:comment = substitute(l:comment, '^\n', '', '')
   endif
 
-  let l:comment = substitute(l:comment, '\s\+', ' ', 'g')
+  if get(g:, 'comment_translate_trim_spaces', 1)
+    let l:comment = substitute(l:comment, '\s\+', ' ', 'g')
+  endif
   let l:comment = trim(l:comment)
 
   return l:comment

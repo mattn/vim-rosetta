@@ -67,6 +67,14 @@ Customize the maximum width of the popup window (default: 80):
 let g:comment_translate_popup_max_width = 100
 ```
 
+### Trim Spaces
+
+Control whether to collapse multiple spaces into single space (default: 1):
+
+```vim
+let g:comment_translate_trim_spaces = 0  " Keep original spacing
+```
+
 ### Custom Key Mapping
 
 Disable the default mapping and set your own:
