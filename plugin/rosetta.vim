@@ -12,6 +12,8 @@ if !hasmapto('<plug>(rosetta-translate-at)')
   xmap <Leader>tt <plug>(rosetta-translate-at)
 endif
 
+command! -range RosettaTranslateBuffer call rosetta#translate_buffer()
+
 if get(g:, 'rosetta_translate_comment_auto', 0)
   augroup RosettaTranslateComment
     autocmd!

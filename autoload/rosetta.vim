@@ -202,6 +202,7 @@ endfunction
 " ============================================================================
 " Comment Translation Feature
 " ============================================================================
+
 function! rosetta#translate_at(select) abort
   if a:select
     let l:saved_reg = @"
@@ -310,4 +311,28 @@ function! s:complete_name_callback(out, start) abort
     call complete(a:start + 1, uniq(l:completions))
   catch
   endtry
+endfunction
+
+" ============================================================================
+" Name Completion Feature
+" ============================================================================
+
+function! rosetta#translate_buffer() range abort
+  let l:lines = getline(1, '$')
+  let l:text = join(l:lines, "\n")
+  
+  if empty(l:text)
+    echo 'Buffer is empty'
+    return
+  endif
+  
+  call s:translate_text(l:text, {translation -> s:show_translation_in_split(translation)})
+endfunction
+
+function! s:show_translation_in_split(text) abort
+  vnew
+  setlocal buftype=nofile bufhidden=wipe noswapfile
+  call setline(1, split(a:text, '\n'))
+  setlocal nomodifiable
+  file [Translation]
 endfunction

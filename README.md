@@ -6,6 +6,7 @@ A Vim plugin that provides translation features for code comments and variable n
 
 - **Comment Translation**: Translate code comments under the cursor to any language
 - **Word/Selection Translation**: Translate the word under cursor or selected text
+- **Buffer Translation**: Translate entire buffer and display in a new split window
 - **Auto Translation**: Automatically translate comments on cursor hold
 - **Variable Name Completion**: Japanese to English translation for variable naming (snake_case, UPPER_CASE, camelCase, PascalCase)
 - Supports multi-line comments
@@ -65,6 +66,14 @@ Place your cursor on a word (or select text in visual mode) and use the default 
 ```
 
 In visual mode, the selected text will be translated.
+
+### Buffer Translation
+
+Translate the entire buffer and display the result in a new vertical split window:
+
+```vim
+:RosettaTranslateBuffer
+```
 
 ### Auto Translation
 
@@ -167,6 +176,12 @@ https://github.com/user-attachments/assets/5573ea0c-9e63-4fc5-9127-55de81b48861
 1. Extracts the word under cursor or selected text
 2. Sends the text to Google Translate API via `curl`
 3. Displays the translation in a popup window
+
+### Buffer Translation
+
+1. Extracts all text from the current buffer
+2. Sends the text to Google Translate API via `curl`
+3. Displays the translation in a new vertically split window
 
 ### Variable Name Completion
 

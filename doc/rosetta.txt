@@ -44,6 +44,10 @@ Comment Translation~
 Word/Selection Translation~
     Translate the word under cursor or selected text in visual mode.
 
+Buffer Translation~
+    Translate the entire buffer and display the result in a new vertical split
+    window.
+
 Auto Translation~
     Automatically translate comments when cursor stops on them.
 
@@ -61,6 +65,10 @@ COMMANDS                                                    *rosetta-commands*
 
 :RosettaTranslateAt                                      *:RosettaTranslateAt*
     Translate the word under cursor and display the result in a popup window.
+
+:RosettaTranslateBuffer                              *:RosettaTranslateBuffer*
+    Translate the entire buffer and display the result in a new vertically
+    split window. The translation window is read-only.
 
 ==============================================================================
 MAPPINGS                                                    *rosetta-mappings*
@@ -169,6 +177,13 @@ rosetta#translate_comment_auto()          *rosetta#translate_comment_auto()*
     Auto-translate comment on cursor hold. Used internally when
     |g:rosetta_translate_comment_auto| is enabled.
 
+rosetta#translate_buffer()                          *rosetta#translate_buffer()*
+    Translate the entire buffer. This function:
+    1. Extracts all text from the current buffer
+    2. Sends text to Google Translate API via curl (asynchronously)
+    3. Displays translation in a new vertically split window
+    4. The translation window is read-only and uses a scratch buffer
+
 rosetta#complete_name()                              *rosetta#complete_name()*
     Complete variable name with translation. Extracts Japanese text before
     cursor, translates to English, and provides completion candidates in
@@ -230,6 +245,12 @@ Word/Selection Translation~
     1. Extract word via |expand('<cword>')| or visual selection
     2. Send to Google Translate API asynchronously
     3. Display translation in popup window
+
+Buffer Translation~
+    1. Extract all text from current buffer
+    2. Send to Google Translate API asynchronously via |job_start()|
+    3. Open new vertical split with translated text
+    4. Set as read-only scratch buffer
 
 Variable Name Completion~
     1. Extract text before cursor position
