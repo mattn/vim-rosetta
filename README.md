@@ -5,8 +5,9 @@ A Vim plugin that provides translation features for code comments and variable n
 ## Features
 
 - **Comment Translation**: Translate code comments under the cursor to any language
+- **Word/Selection Translation**: Translate the word under cursor or selected text
 - **Auto Translation**: Automatically translate comments on cursor hold
-- **Variable Name Completion**: Japanese to English translation for variable naming (snake_case, UPPER_CASE, camelCase)
+- **Variable Name Completion**: Japanese to English translation for variable naming (snake_case, UPPER_CASE, camelCase, PascalCase)
 - Supports multi-line comments
 - Works with various comment styles (`//`, `/* */`, `#`, `"`)
 
@@ -52,8 +53,18 @@ Place your cursor on a comment and run:
 Or use the default mapping:
 
 ```vim
-<Leader>rt
+<Leader>tc
 ```
+
+### Word/Selection Translation
+
+Place your cursor on a word (or select text in visual mode) and use the default mapping:
+
+```vim
+<Leader>tt
+```
+
+In visual mode, the selected text will be translated.
 
 ### Auto Translation
 
@@ -114,12 +125,17 @@ my_function
 This is awesome function
 ```
 
-#### Custom Key Mapping
+#### Custom Key Mappings
 
-Disable the default mapping and set your own:
+Disable the default mappings and set your own:
 
 ```vim
+" Comment translation
 nmap <C-t> <Plug>(rosetta-translate-comment)
+
+" Word/selection translation
+nmap <C-w> <Plug>(rosetta-translate-at)
+xmap <C-w> <Plug>(rosetta-translate-at)
 ```
 
 ### Variable Name Completion
@@ -133,22 +149,30 @@ Example:
   - `hello_world` (snake_case)
   - `HELLO_WORLD` (UPPER_CASE)
   - `helloWorld` (camelCase)
-  - `HelloWorld` (CamelCase)
+  - `HelloWorld` (PascalCase)
 
 ## How It Works
 
 https://github.com/user-attachments/assets/5573ea0c-9e63-4fc5-9127-55de81b48861
 
 ### Comment Translation
+
 1. Detects if the cursor is on a comment using Vim's syntax highlighting
 2. Extracts the comment text (supports multi-line comments)
 3. Sends the text to Google Translate API via `curl`
 4. Displays the translation in a popup window
 
+### Word/Selection Translation
+
+1. Extracts the word under cursor or selected text
+2. Sends the text to Google Translate API via `curl`
+3. Displays the translation in a popup window
+
 ### Variable Name Completion
+
 1. Extracts Japanese text before cursor
 2. Translates to English using Google Translate API
-3. Converts to multiple naming formats (snake_case, UPPER_CASE, camelCase)
+3. Converts to multiple naming formats (snake_case, UPPER_CASE, camelCase, PascalCase)
 4. Provides as completion candidates
 
 ## License
