@@ -318,7 +318,11 @@ endfunction
 " ============================================================================
 
 function! rosetta#translate_buffer() range abort
-  let l:lines = getline(1, '$')
+  if a:firstline == 1 && a:lastline == line('$')
+    let l:lines = getline(1, '$')
+  else
+    let l:lines = getline(a:firstline, a:lastline)
+  endif
   let l:text = join(l:lines, "\n")
   
   if empty(l:text)

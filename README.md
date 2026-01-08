@@ -75,6 +75,13 @@ Translate the entire buffer and display the result in a new vertical split windo
 :RosettaTranslateBuffer
 ```
 
+Or translate a specific range:
+
+```vim
+:10,20RosettaTranslateBuffer
+:'<,'>RosettaTranslateBuffer  " Visual selection
+```
+
 ### Auto Translation
 
 Enable automatic translation when cursor stops on a comment:

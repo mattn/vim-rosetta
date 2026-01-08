@@ -67,8 +67,17 @@ COMMANDS                                                    *rosetta-commands*
     Translate the word under cursor and display the result in a popup window.
 
 :RosettaTranslateBuffer                              *:RosettaTranslateBuffer*
-    Translate the entire buffer and display the result in a new vertically
-    split window. The translation window is read-only.
+:[range]RosettaTranslateBuffer
+    Translate the entire buffer (or specified range) and display the result
+    in a new vertically split window. The translation window is read-only.
+
+    If no range is given, translates the entire buffer.
+
+    Examples: >
+        :RosettaTranslateBuffer           " Translate entire buffer
+        :10,20RosettaTranslateBuffer      " Translate lines 10-20
+        :'<,'>RosettaTranslateBuffer      " Translate visual selection
+<
 
 ==============================================================================
 MAPPINGS                                                    *rosetta-mappings*
@@ -112,7 +121,7 @@ CONFIGURATION                                          *rosetta-configuration*
 
 g:rosetta_target_lang                                  *g:rosetta_target_lang*
     Target language for translation. Default: 'ja' (Japanese)
-    
+
     Supported language codes: 'en', 'ja', 'zh-CN', 'ko', 'es', 'fr', 'de', etc.
 >
     let g:rosetta_target_lang = 'en'
@@ -168,7 +177,7 @@ rosetta#translate_comment()                      *rosetta#translate_comment()*
 
 rosetta#translate_at({select})                      *rosetta#translate_at()*
     Translate word or selection.
-    
+
     Parameters:~
         {select}    If 1, translate visual selection. If 0, translate word
                     under cursor.
@@ -178,17 +187,23 @@ rosetta#translate_comment_auto()          *rosetta#translate_comment_auto()*
     |g:rosetta_translate_comment_auto| is enabled.
 
 rosetta#translate_buffer()                          *rosetta#translate_buffer()*
-    Translate the entire buffer. This function:
-    1. Extracts all text from the current buffer
+    Translate the entire buffer or specified range. This function:
+    1. Extracts text from the current buffer (or range if specified)
     2. Sends text to Google Translate API via curl (asynchronously)
     3. Displays translation in a new vertically split window
     4. The translation window is read-only and uses a scratch buffer
+
+    This function supports Vim's range feature.
+    Examples: >
+        :call rosetta#translate_buffer()     " Translate entire buffer
+        :10,20call rosetta#translate_buffer() " Translate lines 10-20
+<
 
 rosetta#complete_name()                              *rosetta#complete_name()*
     Complete variable name with translation. Extracts Japanese text before
     cursor, translates to English, and provides completion candidates in
     multiple naming formats:
-    
+
     - snake_case (e.g., hello_world)
     - UPPER_CASE (e.g., HELLO_WORLD)
     - camelCase (e.g., helloWorld)
@@ -201,10 +216,10 @@ Basic Usage~
 >
     " Place cursor on a comment and press <Leader>tc
     // このコメントを翻訳する
-    
+
     " Place cursor on a word and press <Leader>tt
     hello
-    
+
     " In insert mode, type Japanese and press <C-x><C-t>
     こんにちは世界<C-x><C-t>
     " Completion candidates:
@@ -215,16 +230,16 @@ Custom Configuration~
 >
     " Translate to English instead of Japanese
     let g:rosetta_target_lang = 'en'
-    
+
     " Enable auto-translation
     let g:rosetta_translate_comment_auto = 1
-    
+
     " Strip asterisks from C-style comments
     let g:rosetta_strip_c_style = 1
-    
+
     " Wider popup window
     let g:rosetta_popup_max_width = 120
-    
+
     " Custom key mappings
     nmap <C-t> <Plug>(rosetta-translate-comment)
     nmap <C-w> <Plug>(rosetta-translate-at)
