@@ -77,25 +77,34 @@ function! s:comment_at_cursor() abort
   let l:lines = []
   for l:i in range(l:start_line, l:end_line)
     let l:text = getline(l:i)
-    let l:start_col = 1
+    let l:start_col = l:i == l:line ? l:col : 1
     let l:end_col = len(l:text)
 
-    while l:start_col <= len(l:text)
-      let l:synid = synID(l:i, l:start_col, 1)
+    while l:start_col > 1
+      let l:synid = synID(l:i, l:start_col - 1, 1)
       let l:synname = synIDattr(l:synid, 'name')
-      if l:synname =~? 'comment'
+      if l:synname !~? 'comment'
         break
       endif
-      let l:start_col += 1
+      let l:start_col -= 1
     endwhile
 
-    while l:end_col > 0
+    while l:end_col > l:start_col
       let l:synid = synID(l:i, l:end_col, 1)
       let l:synname = synIDattr(l:synid, 'name')
       if l:synname =~? 'comment'
         break
       endif
       let l:end_col -= 1
+    endwhile
+
+    while l:end_col < len(l:text)
+      let l:synid = synID(l:i, l:end_col + 1, 1)
+      let l:synname = synIDattr(l:synid, 'name')
+      if l:synname !~? 'comment'
+        break
+      endif
+      let l:end_col += 1
     endwhile
 
     if l:start_col <= l:end_col
